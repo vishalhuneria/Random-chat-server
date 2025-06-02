@@ -81,13 +81,50 @@ io.on("connection", (socket) => {
       };
       console.log(data);
       io.to(calleePersonalCode).emit("pre-offer", data);
+    } else {
+      io.to(socket.id).emit("pre-offer", {
+        callType: "not-found",
+        callerSocketId: socket.id,
+      });
     }
 
     // console.log("pre-offer emitted to callee");
   });
 
+  socket.on("pre-offer-answer", (data) => {
+    console.log("pre-offer answer received from callee");
+    const { preOfferAnswer, callerSocketId } = data;
+    const connectedPeer = connectedPeers.find(
+      (peerSocketId) => peerSocketId === callerSocketId
+    );
+    if (connectedPeer) {
+      io.to(callerSocketId).emit("pre-offer-answer", {
+        preOfferAnswer: preOfferAnswer,
+        calleeSocketId: instantSocketId,
+      });
+    } else {
+      io.to(callerSocketId).emit("pre-offer-answer", {
+        preOfferAnswer: "callee-not-found",
+        calleeSocketId: instantSocketId,
+      });
+    }
+  });
+
   socket.on("disconnect", () => {
+    console.log(socket.id + " disconnected from socket server");
     connectedPeers = connectedPeers.filter((id) => id !== socket.id);
+  });
+
+  socket.on("webRTC-signaling", (data) => {
+    const { connectedUserSocketId } = data;
+    const connectedPeer = connectedPeers.find(
+      (peerSocketId) => peerSocketId === connectedUserSocketId
+    );
+    if (connectedPeer) {
+      io.to(connectedUserSocketId).emit("webRTC-signaling", data);
+    } else {
+      console.log("Connected peer not found for signaling");
+    }
   });
 });
 
