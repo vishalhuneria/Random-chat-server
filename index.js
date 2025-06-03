@@ -85,16 +85,16 @@ io.on("connection", (socket) => {
 
   socket.on("webRTC-signaling", (data) => {
     console.log("sssssssssssssssssssssssssssssssssssssssssssss");
-    const { connectedUserSocketId, type, offer } = data;
+    const { calleeSocketId, type, offer } = data; // caleee id
 
-    console.log("connectedUserSocketId: ", connectedUserSocketId);
+    console.log("connectedUserSocketId: ", calleeSocketId, type);
     const connectedPeer = connectedPeers.find(
-      (peerSocketId) => peerSocketId === connectedUserSocketId
+      (peerSocketId) => peerSocketId === calleeSocketId
     );
     if (connectedPeer) {
-      console.log("connectedPeer found", connectedUserSocketId);
-      io.to(connectedUserSocketId).emit("webRTC-signaling", {
-        connectedUserSocketId,
+      console.log("connectedPeer found", calleeSocketId);
+      io.to(calleeSocketId).emit("webRTC-signaling", {
+        callerSocketId: socket.id,
         type,
         offer,
       });
