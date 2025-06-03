@@ -1,40 +1,3 @@
-// const express = require("express");
-// const http = require("http");
-// const app = express();
-// const PORT = process.env.PORT || 4000;
-// const server = http.createServer(app);
-// const io = require("socket.io")(server);
-
-// app.use(express.static("public"));
-
-// app.get("/", (req, res) => {
-//   res.sendFile(__dirname + "/public/index.html");
-// });
-
-// app.get("/hello", (req, res) => {
-//   res.send("hello");
-// });
-
-// let connectedPeers = [];
-
-// io.on("connection", (socket) => {
-//   connectedPeers.push(socket.id);
-//   console.log(socket.id + " connected to socket server");
-
-//   socket.on("disconnect", () => {
-//     console.log("user disconnected from socket server");
-
-//     const newConnectedPeers = connectedPeers.filter((peersSocketId) => {
-//       return peersSocketId !== socket.id;
-//     });
-//     connectedPeers = newConnectedPeers;
-//   });
-// });
-
-// server.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
-
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -98,6 +61,11 @@ io.on("connection", (socket) => {
       (peerSocketId) => peerSocketId === callerSocketId
     );
     if (connectedPeer) {
+      console.log("sending answer accepted to caller", "callee details", {
+        preOfferAnswer: preOfferAnswer,
+        calleeSocketId: instantSocketId,
+      });
+
       io.to(callerSocketId).emit("pre-offer-answer", {
         preOfferAnswer: preOfferAnswer,
         calleeSocketId: instantSocketId,
@@ -116,12 +84,20 @@ io.on("connection", (socket) => {
   });
 
   socket.on("webRTC-signaling", (data) => {
-    const { connectedUserSocketId } = data;
+    console.log("sssssssssssssssssssssssssssssssssssssssssssss");
+    const { connectedUserSocketId, type, offer } = data;
+
+    console.log("connectedUserSocketId: ", connectedUserSocketId);
     const connectedPeer = connectedPeers.find(
       (peerSocketId) => peerSocketId === connectedUserSocketId
     );
     if (connectedPeer) {
-      io.to(connectedUserSocketId).emit("webRTC-signaling", data);
+      console.log("connectedPeer found", connectedUserSocketId);
+      io.to(connectedUserSocketId).emit("webRTC-signaling", {
+        connectedUserSocketId,
+        type,
+        offer,
+      });
     } else {
       console.log("Connected peer not found for signaling");
     }
